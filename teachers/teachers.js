@@ -2,6 +2,9 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const { requestCounter } = require('./metrics');
+const client = require('prom-client');
+
 require('dotenv').config();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,14 +39,21 @@ initialLoad();
 app.get('/', (req, res) => {
 	res.send('This is our main endpoint');
 });
+app.get('/metrics', async (req, res) => {
+	try {
+		return res.status(200).send(await client.register.metrics());
+	} catch (err) {}
+});
 
 // GET all teachers
 app.get('/teachers', async (req, res) => {
+	requestCounter.inc({ http: 'get', route: 'teacher', status: 200 });
 	Teacher.find()
 		.then((teachers) => {
 			res.send(teachers);
 		})
 		.catch((err) => {
+			requestCounter.inc({ http: 'get', route: 'teacher', status: 400 });
 			if (err) {
 				throw err;
 			}
@@ -52,6 +62,7 @@ app.get('/teachers', async (req, res) => {
 
 // GET single teacher
 app.get('/teachers/:uid', async (req, res) => {
+	requestCounter.inc({ http: 'get', route: 'teacher', status: 200 });
 	Teacher.findById(req.params.uid)
 		.then((teacher) => {
 			if (teacher) {
@@ -61,6 +72,7 @@ app.get('/teachers/:uid', async (req, res) => {
 			}
 		})
 		.catch((err) => {
+			requestCounter.inc({ http: 'get', route: 'teacher', status: 400 });
 			if (err) {
 				throw err;
 			}
@@ -82,10 +94,12 @@ app.post('/teacher', async (req, res) => {
 	teacher
 		.save()
 		.then((r) => {
+			requestCounter.inc({ http: 'post', route: 'teacher', status: 200 });
 			res.send('Teacher created..');
 		})
 		.catch((err) => {
 			if (err) {
+				requestCounter.inc({ http: 'post', route: 'teacher', status: 400 });
 				throw err;
 			}
 		});
@@ -95,9 +109,12 @@ app.post('/teacher', async (req, res) => {
 app.delete('/teachers/:uid', async (req, res) => {
 	Teacher.findByIdAndDelete(req.params.uid)
 		.then(() => {
+			requestCounter.inc({ http: 'delete', route: 'teacher', status: 200 });
 			res.send('Teacher deleted with success...');
 		})
 		.catch(() => {
+			requestCounter.inc({ http: 'delete', route: 'teacher', status: 400 });
+
 			res.sendStatus(404);
 		});
 });
@@ -109,10 +126,13 @@ app.get('/teachers/:uid/courses', async (req, res) => {
 			.get('http://localhost:5051/courses')
 			.then((courses) => {
 				if (courses) {
+					requestCounter.inc({ http: 'get', route: 'course', status: 200 });
 					res.send(courses.data);
 				}
 			})
 			.catch((err) => {
+				requestCounter.inc({ http: 'get', route: 'course', status: 400 });
+
 				res.sendStatus(404).send(err);
 			});
 	} catch (error) {
@@ -136,17 +156,25 @@ app.post('/teachers/:uid/course', async (req, res) => {
 					.save()
 					.then(() => {
 						res.send(
-							`Course created for teacher:${teacher.email} with courseId:${courseResponse.data._id}`
+							requestCounter.inc({
+								http: 'post',
+								route: 'course',
+								status: 200,
+							})`Course created for teacher:${teacher.email} with courseId:${courseResponse.data._id}`
 						);
 					})
 					.catch((e) => {
+						requestCounter.inc({ http: 'post', route: 'course', status: 400 });
+
 						res.send("failed to add courseId in teacher's doc");
 					});
 			});
 		} else {
+			requestCounter.inc({ http: 'post', route: 'course', status: 400 });
 			res.send('Course not created..');
 		}
 	} catch (error) {
+		requestCounter.inc({ http: 'post', route: 'course', status: 400 });
 		res.sendStatus(400).send('Error while creating the course');
 	}
 });
@@ -156,18 +184,26 @@ app.delete('/teachers/:uid/courses', async (req, res) => {
 	axios
 		.delete(`http://localhost:5051/courses?uid=${req.params.uid}`)
 		.then((delRes) => {
+			requestCounter.inc({ http: 'delete', route: 'course', status: 200 });
+
 			if (delRes.data.success) {
 				res.send('Courses deleted..');
 			} else {
+				requestCounter.inc({ http: 'delete', route: 'course', status: 400 });
+
 				res.sendStatus(404).send(delRes.data);
 			}
 		})
 		.catch((err) => {
+			requestCounter.inc({ http: 'delete', route: 'course', status: 400 });
+
 			res.sendStatus(404).send(err);
 		});
 });
 
-// APP listening on port 4040
-app.listen(5050, () => {
+// APP listening on port
+const PORT = process.env.PORT || 5050;
+
+app.listen(PORT, () => {
 	console.log('Up and running! -- This is our Teacher service');
 });
