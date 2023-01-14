@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const { requestCounter } = require('./metrics');
 const client = require('prom-client');
+const { logger, errorLogger } = require('./logger');
 
 require('dotenv').config();
 
@@ -94,11 +95,17 @@ app.post('/teacher', async (req, res) => {
 	teacher
 		.save()
 		.then((r) => {
+			logger.info('teacher ' + teacher.email + ' is added', {
+				request_id: req.request_id,
+			});
 			requestCounter.inc({ http: 'post', route: 'teacher', status: 200 });
 			res.send('Teacher created..');
 		})
 		.catch((err) => {
 			if (err) {
+				errorLogger.error('teacher ' + teacher.email + " can't be added", {
+					request_id: req.request_id,
+				});
 				requestCounter.inc({ http: 'post', route: 'teacher', status: 400 });
 				throw err;
 			}
@@ -109,10 +116,16 @@ app.post('/teacher', async (req, res) => {
 app.delete('/teachers/:uid', async (req, res) => {
 	Teacher.findByIdAndDelete(req.params.uid)
 		.then(() => {
+			logger.info('teacher ' + req.params.uid + ' is deleted', {
+				request_id: req.request_id,
+			});
 			requestCounter.inc({ http: 'delete', route: 'teacher', status: 200 });
 			res.send('Teacher deleted with success...');
 		})
 		.catch(() => {
+			errorLogger.error('teacher ' + req.params.uid + " can't be deleted", {
+				request_id: req.request_id,
+			});
 			requestCounter.inc({ http: 'delete', route: 'teacher', status: 400 });
 
 			res.sendStatus(404);

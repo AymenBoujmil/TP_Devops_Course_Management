@@ -9,4 +9,4 @@ const requestCounter = new client.Counter({
 	help: 'All requests counter',
 	labelNames: ['http', 'route', 'status'],
 });
-module.exports = { requestCounter, getRequestCounter, postRequestCounter };
+module.exports = { requestCounter };

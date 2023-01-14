@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const client = require('prom-client');
 
 const { requestCounter } = require('./metrics');
+const { logger, errorLogger } = require('./logger');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -106,12 +107,17 @@ app.post('/course', async (req, res) => {
 		.save()
 		.then((courseObj) => {
 			requestCounter.inc({ http: 'post', route: 'course', status: 200 });
-
+			logger.info('Course ' + course.name + 'is created', {
+				request_id: req.request_id,
+			});
 			res.send(courseObj);
 		})
 		.catch((err) => {
 			if (err) {
 				requestCounter.inc({ http: 'post', route: 'course', status: 400 });
+				errorLogger.error('Course ' + course.name + ' is not created', {
+					request_id: req.request_id,
+				});
 
 				throw err;
 			}
@@ -123,11 +129,17 @@ app.delete('/courses/:cid', async (req, res) => {
 	Course.findByIdAndDelete(req.params.cid)
 		.then(() => {
 			requestCounter.inc({ http: 'delete', route: 'course', status: 200 });
+			logger.info('Course ' + course.name + ' is created', {
+				request_id: req.request_id,
+			});
 
 			res.send('Course deleted with success...');
 		})
 		.catch(() => {
 			requestCounter.inc({ http: 'delete', route: 'course', status: 400 });
+			errorLogger.error('Course ' + course.name + ' is not deleted', {
+				request_id: req.request_id,
+			});
 
 			res.sendStatus(404);
 		});
@@ -148,8 +160,8 @@ app.delete('/courses', async (req, res) => {
 	});
 });
 
-// APP listening on port 
-const PORT = process.env.PORT || 5051
+// APP listening on port
+const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => {
 	console.log('Up and running! -- This is our Courses service');
 });
