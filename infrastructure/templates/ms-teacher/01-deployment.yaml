@@ -5,18 +5,22 @@ metadata:
   labels:
     app: ms-teacher
 spec:
-  replicas: 3
+  replicas: {{.Values.deployment.replicas}}
   selector:
     matchLabels:
       app: ms-teacher
   template:
     metadata:
+      annotations:
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+        prometheus.io/scrape: "true"
       labels:
         app: ms-teacher
     spec:
       containers:
         - name: ms-teacher
-          image: aymenboujmil/ms-teachers
+          image: {{.Values.teachers.image.name}}
           env:
             - name: MONGOOSE_CONNECT
               valueFrom:
@@ -26,5 +30,5 @@ spec:
             - name: PORT
               value: "5050"
           ports:
-            - containerPort: 5050
+            - containerPort: {{.Values.teachers.http.port}}
       restartPolicy: Always

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: chart-service
+description: Helm chart to install the amazing teacher service
+version: 0.1.0

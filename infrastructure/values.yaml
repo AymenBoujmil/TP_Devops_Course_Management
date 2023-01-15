@@ -1,0 +1,15 @@
+deployment:
+  replicas: 3
+
+teachers:
+  image:
+    name: aymenboujmil/ms-teachers
+    tag: latest
+  http:
+    port: 5050
+courses:
+  image:
+    name: aymenboujmil/ms-courses
+    tag: latest
+  http:
+    port: 5051
