@@ -23,6 +23,8 @@ spec:
                 secretKeyRef:
                   name: teachers-secrets
                   key: mongoose
+            - name: PORT
+              value: "5050"
           ports:
             - containerPort: 5050
       restartPolicy: Always

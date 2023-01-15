@@ -23,6 +23,9 @@ spec:
                 secretKeyRef:
                   name: courses-secrets
                   key: mongoose
+            - name: PORT
+              value: "5051"
+
           ports:
             - containerPort: 5051
       restartPolicy: Always
