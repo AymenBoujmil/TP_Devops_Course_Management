@@ -16,6 +16,7 @@
     "mongoose": "^6.8.3",
     "nodemon": "^2.0.20",
     "prom-client": "^14.1.1",
+    "uuid": "^9.0.0",
     "winston": "^3.8.2"
   }
 }
