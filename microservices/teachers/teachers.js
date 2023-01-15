@@ -136,7 +136,7 @@ app.delete('/teachers/:uid', async (req, res) => {
 app.get('/teachers/:uid/courses', async (req, res) => {
 	try {
 		axios
-			.get('http://localhost:5051/courses')
+			.get('http://ms-course-service:80/courses')
 			.then((courses) => {
 				if (courses) {
 					requestCounter.inc({ http: 'get', route: 'course', status: 200 });
@@ -156,7 +156,7 @@ app.get('/teachers/:uid/courses', async (req, res) => {
 // Create new course for a teacher
 app.post('/teachers/:uid/course', async (req, res) => {
 	try {
-		const courseResponse = await axios.post('http://localhost:5051/course', {
+		const courseResponse = await axios.post('http://ms-course-service:80/course', {
 			name: req.body.name,
 			teacherId: mongoose.Types.ObjectId(req.params.uid),
 			time: req.body.time,
@@ -195,7 +195,7 @@ app.post('/teachers/:uid/course', async (req, res) => {
 // Delete all the courses for an teacher
 app.delete('/teachers/:uid/courses', async (req, res) => {
 	axios
-		.delete(`http://localhost:5051/courses?uid=${req.params.uid}`)
+		.delete(`http://ms-course-service:80/courses?uid=${req.params.uid}`)
 		.then((delRes) => {
 			requestCounter.inc({ http: 'delete', route: 'course', status: 200 });
 
