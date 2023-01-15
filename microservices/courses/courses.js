@@ -4,8 +4,14 @@ const app = express();
 const bodyParser = require('body-parser');
 const client = require('prom-client');
 
+
 const { requestCounter } = require('./metrics');
 const { logger, errorLogger } = require('./logger');
+
+app.use((req, res, next) => {
+    req.requestId = uuid.v4();
+    next();
+});
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -130,7 +136,7 @@ app.delete('/courses/:cid', async (req, res) => {
 		.then(() => {
 			requestCounter.inc({ http: 'delete', route: 'course', status: 200 });
 			logger.info('Course ' + course.name + ' is created', {
-				request_id: req.request_id,
+				requestId: req.requestId,
 			});
 
 			res.send('Course deleted with success...');
@@ -138,7 +144,7 @@ app.delete('/courses/:cid', async (req, res) => {
 		.catch(() => {
 			requestCounter.inc({ http: 'delete', route: 'course', status: 400 });
 			errorLogger.error('Course ' + course.name + ' is not deleted', {
-				request_id: req.request_id,
+				requestId: req.requestId,
 			});
 
 			res.sendStatus(404);

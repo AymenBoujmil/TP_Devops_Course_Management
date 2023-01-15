@@ -1,4 +1,5 @@
 const express = require('express');
+const uuid = require('uuid');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
@@ -6,8 +7,13 @@ const { requestCounter } = require('./metrics');
 const client = require('prom-client');
 const { logger, errorLogger } = require('./logger');
 
+
 require('dotenv').config();
 
+app.use((req, res, next) => {
+    req.requestId = uuid.v4();
+    next();
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -96,7 +102,7 @@ app.post('/teacher', async (req, res) => {
 		.save()
 		.then((r) => {
 			logger.info('teacher ' + teacher.email + ' is added', {
-				request_id: req.request_id,
+				requestId: req.requestId,
 			});
 			requestCounter.inc({ http: 'post', route: 'teacher', status: 200 });
 			res.send('Teacher created..');
@@ -104,7 +110,7 @@ app.post('/teacher', async (req, res) => {
 		.catch((err) => {
 			if (err) {
 				errorLogger.error('teacher ' + teacher.email + " can't be added", {
-					request_id: req.request_id,
+					requestId: req.requestId,
 				});
 				requestCounter.inc({ http: 'post', route: 'teacher', status: 400 });
 				throw err;
@@ -117,14 +123,14 @@ app.delete('/teachers/:uid', async (req, res) => {
 	Teacher.findByIdAndDelete(req.params.uid)
 		.then(() => {
 			logger.info('teacher ' + req.params.uid + ' is deleted', {
-				request_id: req.request_id,
+				requestId: req.requestId,
 			});
 			requestCounter.inc({ http: 'delete', route: 'teacher', status: 200 });
 			res.send('Teacher deleted with success...');
 		})
 		.catch(() => {
 			errorLogger.error('teacher ' + req.params.uid + " can't be deleted", {
-				request_id: req.request_id,
+				requestId: req.requestId,
 			});
 			requestCounter.inc({ http: 'delete', route: 'teacher', status: 400 });
 
