@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-course-service
+spec:
+  selector:
+    app: ms-course
+  ports:
+    - name: express-port
+      protocol: TCP
+      port: 80
+      targetPort: 5051

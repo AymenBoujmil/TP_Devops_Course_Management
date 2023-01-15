@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-course
+  labels:
+    app: ms-course
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ms-course
+  template:
+    metadata:
+      labels:
+        app: ms-course
+    spec:
+      containers:
+        - name: ms-course
+          image: aymenboujmil/ms-courses
+          env:
+            - name: MONGOOSE_CONNECT
+              valueFrom:
+                secretKeyRef:
+                  name: courses-secrets
+                  key: mongoose
+          ports:
+            - containerPort: 5051
+      restartPolicy: Always
