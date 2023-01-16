@@ -1,6 +1,7 @@
 // Load express
 const express = require('express');
 const app = express();
+const uuid = require('uuid');
 const bodyParser = require('body-parser');
 const client = require('prom-client');
 

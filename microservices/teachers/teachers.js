@@ -7,12 +7,11 @@ const { requestCounter } = require('./metrics');
 const client = require('prom-client');
 const { logger, errorLogger } = require('./logger');
 
-
 require('dotenv').config();
 
 app.use((req, res, next) => {
-    req.requestId = uuid.v4();
-    next();
+	req.requestId = uuid.v4();
+	next();
 });
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -22,7 +21,6 @@ const mongoose = require('mongoose');
 
 // Global Teacher Object which will be the instance of MongoDB document
 var Teacher;
-console.log(process.env.MONGOOSE_CONNECT);
 async function connectMongoose() {
 	await mongoose
 		.connect(process.env.MONGOOSE_CONNECT, {
@@ -138,11 +136,11 @@ app.delete('/teachers/:uid', async (req, res) => {
 		});
 });
 
-// GET all courses for an teacher
+// GET all courses for a teacher
 app.get('/teachers/:uid/courses', async (req, res) => {
 	try {
 		axios
-			.get('http://ms-course-service:80/courses')
+			.get(`http://ms-course-service:80/courses?uid=${req.params.uid}`)
 			.then((courses) => {
 				if (courses) {
 					requestCounter.inc({ http: 'get', route: 'course', status: 200 });
@@ -162,11 +160,14 @@ app.get('/teachers/:uid/courses', async (req, res) => {
 // Create new course for a teacher
 app.post('/teachers/:uid/course', async (req, res) => {
 	try {
-		const courseResponse = await axios.post('http://ms-course-service:80/course', {
-			name: req.body.name,
-			teacherId: mongoose.Types.ObjectId(req.params.uid),
-			time: req.body.time,
-		});
+		const courseResponse = await axios.post(
+			`http://ms-course-service:80/course`,
+			{
+				name: req.body.name,
+				teacherId: mongoose.Types.ObjectId(req.params.uid),
+				time: req.body.time,
+			}
+		);
 
 		if (courseResponse.status === 200) {
 			Teacher.findById(req.params.uid, (err, teacher) => {
