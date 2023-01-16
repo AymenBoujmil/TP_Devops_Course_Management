@@ -29,6 +29,10 @@ spec:
                   key: mongoose
             - name: PORT
               value: "5050"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
           ports:
             - containerPort: {{.Values.teachers.http.port}}
       restartPolicy: Always
