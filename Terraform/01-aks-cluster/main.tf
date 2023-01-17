@@ -1,16 +1,18 @@
 # Pulling information about the resource group
-data "azurerm_resource_group" "dev" {
-  name = var.resource_group_name
+resource "azurerm_resource_group" "dev" {
+  name     = "terraform-devops-rc"
+  location = "West Europe"
 }
 
+
 resource "azurerm_kubernetes_cluster" "example" {
-  name                = "devops-cluster-terraform"
-  location            = data.azurerm_resource_group.dev.location
-  resource_group_name = data.azurerm_resource_group.dev.name
+  name                             = "devops-cluster-terraform"
+  location                         = azurerm_resource_group.dev.location
+  resource_group_name              = azurerm_resource_group.dev.name
   http_application_routing_enabled = true
 
-  dns_prefix          = "devops"
-  sku_tier            = "Free"
+  dns_prefix = "devops"
+  sku_tier   = "Free"
 
   default_node_pool {
     name       = "default"
