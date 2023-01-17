@@ -6,9 +6,21 @@ const axios = require('axios');
 const { requestCounter } = require('./metrics');
 const client = require('prom-client');
 const { logger, errorLogger } = require('./logger');
+const rateLimit = require('express-rate-limit');
 
 require('dotenv').config();
 
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 100,
+	standardHeaders: true,
+	legacyHeaders: false,
+	skip: (req) => {
+		const { path } = req;
+		const skipPaths = ['/metrics'];
+		return skipPaths.includes(path);
+	},
+});
 app.use((req, res, next) => {
 	req.requestId = uuid.v4();
 	next();
@@ -159,43 +171,39 @@ app.get('/teachers/:uid/courses', async (req, res) => {
 
 // Create new course for a teacher
 app.post('/teachers/:uid/course', async (req, res) => {
-	try {
-		const courseResponse = await axios.post(
-			`http://ms-course-service:80/course`,
-			{
-				name: req.body.name,
-				teacherId: mongoose.Types.ObjectId(req.params.uid),
-				time: req.body.time,
-			}
-		);
-
-		if (courseResponse.status === 200) {
-			Teacher.findById(req.params.uid, (err, teacher) => {
-				teacher.courses.push(courseResponse.data._id);
-				teacher
-					.save()
-					.then(() => {
-						res.send(
-							requestCounter.inc({
-								http: 'post',
-								route: 'course',
-								status: 200,
-							})`Course created for teacher:${teacher.email} with courseId:${courseResponse.data._id}`
-						);
-					})
-					.catch((e) => {
-						requestCounter.inc({ http: 'post', route: 'course', status: 400 });
-
-						res.send("failed to add courseId in teacher's doc");
-					});
-			});
-		} else {
-			requestCounter.inc({ http: 'post', route: 'course', status: 400 });
-			res.send('Course not created..');
+	const courseResponse = await axios.post(
+		`http://ms-course-service:80/course`,
+		{
+			name: req.body.name,
+			teacherId: mongoose.Types.ObjectId(req.params.uid),
+			time: req.body.time,
 		}
-	} catch (error) {
+	);
+
+	if (courseResponse.status === 200) {
+		Teacher.findById(req.params.uid, (err, teacher) => {
+			teacher.courses.push(courseResponse.data._id);
+			teacher
+				.save()
+				.then(() => {
+					requestCounter.inc({
+						http: 'post',
+						route: 'course',
+						status: 200,
+					});
+					res.send(
+						`Course created for teacher:${teacher.email} with courseId:${courseResponse.data._id}`
+					);
+				})
+				.catch((e) => {
+					requestCounter.inc({ http: 'post', route: 'course', status: 400 });
+
+					res.send("failed to add courseId in teacher's doc");
+				});
+		});
+	} else {
 		requestCounter.inc({ http: 'post', route: 'course', status: 400 });
-		res.sendStatus(400).send('Error while creating the course');
+		res.send('Course not created..');
 	}
 });
 
