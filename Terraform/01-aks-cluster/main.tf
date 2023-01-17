@@ -4,16 +4,18 @@ data "azurerm_resource_group" "dev" {
 }
 
 resource "azurerm_kubernetes_cluster" "example" {
-  name                = "devops-cluster"
+  name                = "devops-cluster-terraform"
   location            = data.azurerm_resource_group.dev.location
   resource_group_name = data.azurerm_resource_group.dev.name
+  http_application_routing_enabled = true
+
   dns_prefix          = "devops"
   sku_tier            = "Free"
 
   default_node_pool {
     name       = "default"
-    node_count = 1
-    vm_size    = "standard_ds2_v2"
+    node_count = 2
+    vm_size    = "Standard_B2s"
   }
 
   identity {
