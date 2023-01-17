@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: ms-teacher
-          image: {{.Values.teachers.image.name}}
+          image: {{.Values.teachers.image.name}}:v1
           env:
             - name: MONGOOSE_CONNECT
               valueFrom:

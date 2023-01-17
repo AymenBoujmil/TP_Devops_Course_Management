@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: ms-course
-          image: {{.Values.courses.image.name}}
+          image: {{.Values.courses.image.name}}:v1
           env:
             - name: MONGOOSE_CONNECT
               valueFrom:
