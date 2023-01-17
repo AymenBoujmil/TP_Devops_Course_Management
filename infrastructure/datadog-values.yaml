@@ -1,9 +1,10 @@
 datadog:
   site: datadoghq.com
-
-  kubelet:
+  
+  kubelet: 
     tlsVerify: false
-
+  
   logs:
     enabled: true
     containerCollectAll: true
+  
