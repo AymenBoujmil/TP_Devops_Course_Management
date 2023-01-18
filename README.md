@@ -22,7 +22,7 @@ So I started by dockerizing my two services then I Created Yaml files to deploy 
 
 ![image](https://user-images.githubusercontent.com/56639521/213178267-a8647591-8165-41ea-8e12-8d26a8810a22.png)
 
-##Deployment Strategy
+## Deployment Strategy
 I will use Canary because:
 - version released for a subset of users
 - convenient for error rate and performance monitoring
