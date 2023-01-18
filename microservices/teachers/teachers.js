@@ -6,9 +6,22 @@ const axios = require('axios');
 const { requestCounter } = require('./metrics');
 const client = require('prom-client');
 const { logger, errorLogger } = require('./logger');
+const rateLimit = require('express-rate-limit');
 
 require('dotenv').config();
 
+
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 100,
+	standardHeaders: true,
+	legacyHeaders: false,
+	skip: (req) => {
+		const { path } = req;
+		const skipPaths = ['/metrics'];
+		return skipPaths.includes(path);
+	},
+});
 app.use((req, res, next) => {
 	req.requestId = uuid.v4();
 	next();
